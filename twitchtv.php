@@ -78,7 +78,7 @@ class TwitchTV {
 		
 	}
 	
-	// CHecks to see if the user exists on TwitchTV, if it doesn't exist then it will return false, expects a TwitchTV username
+	// Checks to see if the user exists on TwitchTV, if it doesn't exist then it will return false, expects a TwitchTV username
 	public function validate_stream($username) {
 		$curl = curl_init();
 		curl_setopt_array($curl, array(
