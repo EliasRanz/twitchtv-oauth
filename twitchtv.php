@@ -197,15 +197,13 @@ class TwitchTV {
 		curl_close($curl);
 	}
 	
-
-
-	
+	//Returns follower count for a given stream, expects TwitchTV channel passed in
 	public function follower_count($channel) {
 		//initiate connection to the twitch.tv servers
 		$curl = curl_init();
 		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-										CURLOPT_URL => $this->base_url . 'channels/'. $channel .'/follows?client_id=' . $this->client_id
-									  )
+						CURLOPT_URL => $this->base_url . 'channels/'. $channel .'/follows?client_id=' . $this->client_id
+					      )
 		);
 		$result = curl_exec($curl);
 		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
