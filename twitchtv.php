@@ -278,7 +278,7 @@ class TwitchTV {
 		//make sure that a channel is passed in so that it doesn't return an invalid embed code
 		if(!empty($channel)) {
 			//embed code thanks to twitch.tv
-			$embed_code = '<iframe frameborder="0" scrolling="no" id="chat_embed" src="http://twitch.tv/chat/embed?channel='.$channel.'&amp;popout_chat=true" height="'.$height.'" width="'.$width.'"></iframe>
+			$embed_code = '<iframe frameborder="0" scrolling="no" id="chat_embed" src="http://twitch.tv/chat/embed?channel='.$channel.'&amp;popout_chat=true" height="'.$height.'" width="'.$width.'"></iframe>';
 			return $embed_code;
 		} else {
 			return;
