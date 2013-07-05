@@ -1,5 +1,5 @@
 <?php
-class TwitchTV_ers {
+class TwitchTV {
   var $base_url = "https://api.twitch.tv/kraken/";
   var $client_id = 'INSERT CLIENT ID HERE';
   var $client_secret = "INSERT CLIENT SECRET HERE";
