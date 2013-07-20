@@ -12,7 +12,7 @@ class TwitchTV {
   var $client_id = 'INSERT CLIENT ID HERE'; //change this value, should be your TwitchTV Application Client ID
   var $client_secret = "INSERT CLIENT SECRET HERE"; //change this value, should be your TwitchTV Application Client Secret 
   var $redirect_url = 'INSERT REDIRECT URL HERE'; //change this value, should be your TwitchTV Application Rerdirect URL
-  var $scope_array = array('user_read','channel_read','chat_login','user_follows_edit','channel_editor','channel_commercial');
+  var $scope_array = array('user_read','channel_read','chat_login','user_follows_edit','channel_editor','channel_commercial','channel_check_subscription');
 	
 	//generates the url based on the scopes that have been given.
 	public function authenticate() {	
@@ -320,6 +320,23 @@ class TwitchTV {
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
 		$data = curl_exec($ch);
 		$response = json_decode($data, true);
+		return true;
+	}
+	
+	//Call this function if you want a give user to follow an account. Requires a channel to follow and the logged in users access token.
+	public function follow_channel($channel,$access_token) {
+		$username = $this->authenticated_user($access_token);
+		$ch = curl_init($this->base_url . "users/" . $username . "/follows/channels/".$channel);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/vnd.twitchtv.v3+json', 'Authorization: OAuth '.$access_token));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_POST, 1);
+		$fields = array(
+			'client_id' => $this->client_id,
+		);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+		$data = curl_exec($ch);
 		return true;
 	}
 }
