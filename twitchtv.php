@@ -562,43 +562,6 @@ class TwitchTV {
 	private function retrieve_channel_data($username) {
 		return json_decode(file_get_contents($this->base_url.'channels/'.$username));
 	}
-	/**
-	 * Checks to see if a given user has the subscription option. This uses the old metadata from Twitch, which is no longer updated
-	 * 
-	 * @param string $channel
-	 * @return boolean
-	 */
-	public function has_sub_button($channel) {
-		$ch = curl_init('http://www.twitch.tv/meta/'. $channel .'.xml');
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		$xml = curl_exec($ch);
-		$xml_object = simplexml_load_string($xml);
-
-		$sub_button = (array)($xml_object->subscription_program);
-		$has_sub_button = $sub_button[0];
-
-		return $has_sub_button;
-	}
-
-	/**
-	 * Loads the amount that it costs to subscribe to a channel for display in the subscribe button
-	 * 
-	 * @param string $channel
-	 * @return string
-	 */
-	public function subscription_cost($channel) {
-		$ch = curl_init('http://www.twitch.tv/meta/'. $channel .'.xml');
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		$xml = curl_exec($ch);
-		$xml_object = simplexml_load_string($xml);
-		$subscription_content = (array)($xml_object->pw_content->subscription->content);
-		$subscription_html = $subscription_content[0];
-		$price_loc_start = strrpos($subscription_html,'$');
-		$price_loc_end = strrpos($subscription_html,'USD');
-		$price_length = $price_loc_end-$price_loc_start;
-		$price_cost = substr($subscription_html, $price_loc_start,$price_length); 
-		return $price_cost;
-	}
 
 }
 
