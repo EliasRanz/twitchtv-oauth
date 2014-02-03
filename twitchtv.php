@@ -115,9 +115,9 @@ class TwitchTV {
 	public function validate_stream($username) {
 		$curl = curl_init();
 		curl_setopt_array($curl, array(
-										CURLOPT_RETURNTRANSFER => 1,
-										CURLOPT_URL => $this->base_url.'users/'.$username
-									  )
+						CURLOPT_RETURNTRANSFER => 1,
+							   CURLOPT_URL => $this->base_url.'users/'.$username
+					      )
 		);
 		
 		$result = curl_exec($curl);
@@ -145,8 +145,8 @@ class TwitchTV {
 		//initiate connection to the twitch.tv servers
 		$curl = curl_init();
 		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-										CURLOPT_URL => $this->base_url . 'channels/'. $channel .'?client_id=' . $this->client_id
-									  )
+							   CURLOPT_URL => $this->base_url . 'channels/'. $channel .'?client_id=' . $this->client_id
+					      )
 		);
 		$result = curl_exec($curl);
 		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
@@ -157,10 +157,10 @@ class TwitchTV {
 			if(!empty($channel)) {
 				$return = json_decode($result);
 				$stream_details = array('display_name' => $return->display_name,
-											  'status' => $return->status,
-											    'chat' => $return->_links->chat,
-											    'game' => $return->game,
-											  'banner' => $return->banner);
+						      	      'status' => $return->status,
+							        'chat' => $return->_links->chat,
+							        'game' => $return->game,
+							      'banner' => $return->banner);
 				return $stream_details;
 			}
 		}
@@ -177,8 +177,8 @@ class TwitchTV {
 		//initiate connection to the twitch.tv servers
 		$curl = curl_init();
 		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-										CURLOPT_URL => $this->base_url . 'channels/'. $channel .'?client_id=' . $this->client_id
-									  )
+							   CURLOPT_URL => $this->base_url . 'channels/'. $channel .'?client_id=' . $this->client_id
+					      )
 		);
 		$result = curl_exec($curl);
 		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
@@ -209,8 +209,8 @@ class TwitchTV {
 		//initiate connection to the twitch.tv servers
 		$curl = curl_init();
 		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-										CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
-									  )
+							   CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
+					      )
 		);
 		$result = curl_exec($curl);
 		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
@@ -274,9 +274,7 @@ class TwitchTV {
 			curl_setopt($ch, CURLOPT_POST, 1);
 			$fields = array('channel[status]' => $title, 'channel[game]' => $game);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
-			curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-			         'Authorization: OAuth '.$access_token
-			));
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: OAuth '.$access_token));
 			$output = curl_exec($ch);
 			$response = json_decode($output, true);
 			curl_close($ch);
@@ -298,8 +296,8 @@ class TwitchTV {
 			$curl = curl_init();
 
 			curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-		  								    CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
-							)
+		  						   CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
+						      )
 			);
 			$result = curl_exec($curl);
 		}
@@ -338,7 +336,7 @@ class TwitchTV {
 		//initiate connection to the twitch.tv servers
 		$curl = curl_init();
 		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-										CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
+							   CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
 									  )
 		);
 		$result = curl_exec($curl);
@@ -374,7 +372,7 @@ class TwitchTV {
 		//initiate connection to the twitch.tv servers
 		$curl = curl_init();
 		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-										CURLOPT_URL => $this->base_url . 'channels/'. $channel .'/follows?client_id=' . $this->client_id
+						       	   CURLOPT_URL => $this->base_url . 'channels/'. $channel .'/follows?client_id=' . $this->client_id
 									  )
 		);
 		$result = curl_exec($curl);
@@ -404,7 +402,7 @@ class TwitchTV {
 		if(!$result){
 			$curl = curl_init();
 			curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-											CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
+							   	   CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
 										  )
 			);
 			$result = curl_exec($curl);
@@ -449,12 +447,12 @@ class TwitchTV {
 			//embed code for the video thanks to twitch.tv
 			$embed_code = '<iframe width="100%" height="'.$height.'" src="http://www.twitch.tv/widgets/live_embed_player.swf?channel='.$channel.'&auto_play=true&start_volume=25" frameborder="0" allowfullscreen="true" auto_play="true" start_volume="25"></iframe>';
 			/*$embed_code = '<object type="application/x-shockwave-flash" height="'.$height.'" width="100%" id="live_embed_player_flash" data="http://www.twitch.tv/widgets/live_embed_player.swf?channel='.$channel.'" bgcolor="#000000">
-								<param name="allowFullScreen" value="true" />
-								<param name="allowScriptAccess" value="always" />
-								<param name="allowNetworking" value="all" />
-								<param name="movie" value="http://www.twitch.tv/widgets/live_embed_player.swf" />
-								<param name="flashvars" value="hostname=www.twitch.tv&channel='.$channel.'&auto_play=true&start_volume=25" />
-							</object>';*/
+						<param name="allowFullScreen" value="true" />
+						<param name="allowScriptAccess" value="always" />
+						<param name="allowNetworking" value="all" />
+						<param name="movie" value="http://www.twitch.tv/widgets/live_embed_player.swf" />
+						<param name="flashvars" value="hostname=www.twitch.tv&channel='.$channel.'&auto_play=true&start_volume=25" />
+					</object>';*/
 			return $embed_code;
 		} else {
 			return;
@@ -524,7 +522,7 @@ class TwitchTV {
 		curl_setopt($ch, CURLOPT_POST, 1);
 		$fields = array(
 			 'client_id' => $this->client_id,
-			 'length' => $length
+			    'length' => $length
 		);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
 		$data = curl_exec($ch);
