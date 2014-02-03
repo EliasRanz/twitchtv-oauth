@@ -3,7 +3,7 @@
  * TwitchTV API code by Elias Ranz-Schleifer
  * Thank you for using my code please refer to
  * https://github.com/Xxplosions/twitchtv-oauth for future updates
- * Have questions? Contact Elias on Twitter (https://twitter.com/xxplosions)
+ * Have questions or feedback? Contact Elias on Twitter (https://twitter.com/xxplosions)
  * Check out my livestream at http://twitch.tv/xxplosions (It would be amazing to chat with you about future updates)
  */
  
