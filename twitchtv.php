@@ -14,7 +14,23 @@ class TwitchTV {
   var $redirect_url = 'INSERT REDIRECT URL HERE'; //change this value, should be your TwitchTV Application Rerdirect URL
   var $scope_array = array('user_read','channel_read','chat_login','user_follows_edit','channel_editor','channel_commercial','channel_check_subscription');
 	
-	//generates the url based on the scopes that have been given.
+	/**
+	 * Channel data for the fetched user
+	 * 
+	 * @var stdClass
+	 */
+	var $channel_data = null;
+	var $curl_cache;
+	
+	public function __construct(){
+		$this->curl_cache = new TwitchTV_Curl_Cache();
+	}
+
+	/**
+	 * Generates a link based on the desired scope
+	 * 
+	 * @return string 		URL that is used to gain permissions for TwitchTV Authentication
+	 */
 	public function authenticate() {	
 		$i = 0;
 		$return = '';
@@ -36,8 +52,13 @@ class TwitchTV {
 		$authenticate_url = $this->base_url.'oauth2/authorize?response_type=code&client_id=' . $this->client_id . '&redirect_uri=' . $this->redirect_url . '&scope=' . $scope;
 		return $authenticate_url;
 	}
-	
-	//Get the Access Token, expects the code value returned from the TwitchTV callback
+
+	/**
+	 * Get's the access token for a specific user based on the code passed back from Twitch after Authenticating the application.
+	 * 
+	 * @param string $code
+	 * @return string 		Access token that is required by Twitch to make authenticated responses on behalf of the user
+	 */
 	function get_access_token($code) {
 		$ch = curl_init($this->base_url . "oauth2/token");
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
@@ -55,8 +76,14 @@ class TwitchTV {
 		$response = json_decode($data, true);
 		return $response["access_token"];
 	}
-	
-	//Gets the username based on an access token. This will let you know who's Authenticated, expects Access Token
+
+	/**
+	 * Gets the authenticated user based on an access token. 
+	 * It's best to store this value in the database for future use.
+	 * 
+	 * @param string $access_token
+	 * @return string 		Username that is 
+	 */
 	function authenticated_user($access_token) {
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $this->base_url . "user");
@@ -75,21 +102,27 @@ class TwitchTV {
 			$username = $response['name'];
 			return $username;
 		}
-		
 	}
+
+	/**
+	 * Makes sure that the stream that is passed in is an actual channel on TwitchTV.
+	 * 
+	 * @param string $username
+	 * @return boolean 		TRUE means that the channel is valid
+	 *						FALSE means that the channel is invalid
+	 */
 	
-	// Checks to see if the user exists on TwitchTV, if it doesn't exist then it will return false, expects a TwitchTV username
 	public function validate_stream($username) {
 		$curl = curl_init();
 		curl_setopt_array($curl, array(
-						CURLOPT_RETURNTRANSFER => 1,
-						CURLOPT_URL => $this->base_url.'users/'.$username
-					      )
+										CURLOPT_RETURNTRANSFER => 1,
+										CURLOPT_URL => $this->base_url.'users/'.$username
+									  )
 		);
 		
 		$result = curl_exec($curl);
 		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
-		if(!curl_exec($curl)){
+		if(!$result){
 		    die('Error: "' . curl_error($curl) . '" - Code: ' . curl_errno($curl));
 		} else {
 			$decoded = json_decode($result);
@@ -98,16 +131,54 @@ class TwitchTV {
 			} else {
 				return true;
 			}
+			print_r($decoded);
 		}
 	}
 	
-	//Loads in the Display Name, Stream Status, and Banner, expects TwitchTV username
+	/**
+	 * Loads a channel and its data
+	 * 
+	 * @param string $channel
+	 * @return array 		Array of data that includes the display name, Status, Chat links, game that the stream is playing and the banner
+	 */
 	public function load_channel($channel) {
 		//initiate connection to the twitch.tv servers
 		$curl = curl_init();
 		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-					CURLOPT_URL => $this->base_url . 'channels/'. $channel .'?client_id=' . $this->client_id
-				 )
+										CURLOPT_URL => $this->base_url . 'channels/'. $channel .'?client_id=' . $this->client_id
+									  )
+		);
+		$result = curl_exec($curl);
+		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
+		if(!$result){
+		    die('Error: "' . curl_error($curl) . '" - Code: ' . curl_errno($curl));
+		} else {
+			//cURL Response worked
+			if(!empty($channel)) {
+				$return = json_decode($result);
+				$stream_details = array('display_name' => $return->display_name,
+											  'status' => $return->status,
+											    'chat' => $return->_links->chat,
+											    'game' => $return->game,
+											  'banner' => $return->banner);
+				return $stream_details;
+			}
+		}
+		curl_close($curl);
+	}
+
+	/**
+	 * Loads the offline image for a given broadcaster display this if the channel is offline.
+	 * 
+	 * @param string $channel
+	 * @return string 		URL of the image that is given back by the Twitch. Uses a protocoless url on the front end
+	 */
+	public function load_channel_offline_img($channel) {
+		//initiate connection to the twitch.tv servers
+		$curl = curl_init();
+		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
+										CURLOPT_URL => $this->base_url . 'channels/'. $channel .'?client_id=' . $this->client_id
+									  )
 		);
 		$result = curl_exec($curl);
 		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
@@ -117,24 +188,70 @@ class TwitchTV {
 			//cURL Response worked
 			if(!empty($channel)) {
 				$return = json_decode($result);
-				$stream_details = array('display_name' => $return->display_name,
-							'status' => $return->status,
-							'chat' => $return->_links->chat,
-							'banner' => $return->banner);
-				return $stream_details;
+
+				$offline_img = $return->video_banner;
+
+				
+				return str_replace("http:", "", $offline_img);
 			}
 		}
 		curl_close($curl);
+
 	}
-	
-	//Returns the Stream Title based on what the user currently has on their stream, expects TwitchTV username.
+
+	/**
+	 * Grabs the video image that appears on the watch page if a stream is live.
+	 * 
+	 * @param string $channel
+	 * @return string 		URL of the image that is given back by the Twitch. Uses a protocoless url on the front end
+	 */
+	public function load_channel_video_img($channel) {
+		//initiate connection to the twitch.tv servers
+		$curl = curl_init();
+		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
+										CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
+									  )
+		);
+		$result = curl_exec($curl);
+		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
+		if(!curl_exec($curl)){
+		    die('Error: "' . curl_error($curl) . '" - Code: ' . curl_errno($curl));
+		} else {
+			//cURL Response worked
+			if(!empty($channel)) {
+				$return = json_decode($result);
+
+				
+				$preview = $return->stream->preview->medium;
+
+				return str_replace("http:", "", $preview);
+				
+			}
+		}
+		curl_close($curl);
+
+	}
+
+	/**
+	 * Grabs the data for a given broadcast
+	 * 
+	 * @param string $channel
+	 * @return array
+	 */
+	public function get_broadcast_data($username) {
+		return !empty($this->channel_data) ? $this->channel_data : $this->retrieve_channel_data($username);
+	}
+
+	/**
+	 * Grabs the stream title for a given stream
+	 * 
+	 * @param string $username
+	 * @return string
+	 */	
 	public function get_stream_title($username) {
-		$channel_data = json_decode(file_get_contents($this->base_url.'channels/'.$username));
-		$title = $channel_data->status;
-		return $title;
+		return $this->get_broadcast_data($username)->status;
 	}
-	
-	//Updates a the Authenticated users stream title, expects Access Token, optional values are Stream Title and Stream Game
+
 	public function update_stream_title($access_token,$title = null,$game = null) {
 		$username = $this->authenticated_user($access_token);
 		if($username != 'Unauthorized') {
@@ -167,18 +284,66 @@ class TwitchTV {
 			return true;
 		}
 	}
-	
-	//This loads the viewer count for a stream, expects TwitchTV channel.
+
+	/**
+	 * Grabs the viewer count of a given stream
+	 * 
+	 * @param string $channel
+	 * @return array
+	 */
 	public function load_stream_stats($channel) {
+		//initiate connection to the twitch.tv servers
+		$result = $this->curl_cache->get_data('streams');
+		if(!$result){
+			$curl = curl_init();
+
+			curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
+		  								    CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
+							)
+			);
+			$result = curl_exec($curl);
+		}
+
+		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
+		if(!$result){
+		    die('Error: "' . curl_error($curl) . '" - Code: ' . curl_errno($curl));
+		} else {
+			//cURL Response worked
+			if(!empty($channel)) {
+				$return = json_decode($result);
+				
+				// Cache data is only useful if we actually got something back
+				$this->curl_cache->set_data('streams', $result);
+				
+				if($return->stream == null) {
+					return;
+				} else {
+					//echo "<pre>".print_r($return,true)."</pre>";
+					$stream_details = array('viewers' => $return->stream->viewers);
+					return $stream_details;
+				}
+			}
+		}
+		curl_close($curl);
+	}
+
+	/**
+	 * Determins whether a stream is online or offline
+	 * 
+	 * @param string $channel
+	 * @return string
+	 */
+	public function stream_status($channel) {
+		if($channel) {
 		//initiate connection to the twitch.tv servers
 		$curl = curl_init();
 		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-				        	CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
-				 )
+										CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
+									  )
 		);
 		$result = curl_exec($curl);
 		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
-		if(!curl_exec($curl)){
+		if(!$result){
 		    die('Error: "' . curl_error($curl) . '" - Code: ' . curl_errno($curl));
 		} else {
 			//cURL Response worked
@@ -188,25 +353,33 @@ class TwitchTV {
 					$offline = "Stream Offline";
 					return $offline;
 				} else {
-					$stream_details = array('viewers' => $return->stream->viewers);
-					return $stream_details;
+					$online = "Stream Online";
+					return $online;
 				}
 			}
 		}
 		curl_close($curl);
+		} else {
+			return;
+		}
 	}
-	
-	//Returns follower count for a given stream, expects TwitchTV channel passed in
+
+	/**
+	 * Grabs the total number of followers that a stream currently has
+	 * 
+	 * @param string $channel
+	 * @return int
+	 */
 	public function follower_count($channel) {
 		//initiate connection to the twitch.tv servers
 		$curl = curl_init();
 		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-						CURLOPT_URL => $this->base_url . 'channels/'. $channel .'/follows?client_id=' . $this->client_id
-					      )
+										CURLOPT_URL => $this->base_url . 'channels/'. $channel .'/follows?client_id=' . $this->client_id
+									  )
 		);
 		$result = curl_exec($curl);
 		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
-		if(!curl_exec($curl)){
+		if(!$result){
 		    die('Error: "' . curl_error($curl) . '" - Code: ' . curl_errno($curl));
 		} else {
 			//cURL Response worked
@@ -218,24 +391,36 @@ class TwitchTV {
 		}
 		curl_close($curl);
 	}
-	
-	//Loads the Online or Offline status of a stream, expect TwitchTV Username
+
+	/**
+	 * Determines if a stream is online or not
+	 * 
+	 * @param string $channel
+	 * @return boolean
+	 */
 	public function stream_online_status($channel) {
 		//initiate connection to the twitch.tv servers
-		$curl = curl_init();
-		curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
-						CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
-				              )
-		);
-		$result = json_decode(curl_exec($curl));
+		$result = $this->curl_cache->get_data('streams');
+		if(!$result){
+			$curl = curl_init();
+			curl_setopt_array($curl, array( CURLOPT_RETURNTRANSFER => 1,
+											CURLOPT_URL => $this->base_url . 'streams/'. $channel .'?client_id=' . $this->client_id
+										  )
+			);
+			$result = curl_exec($curl);
+		}
 		
 		//makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
-		if(!curl_exec($curl)){
+		if(!$result){
 		    die('Error: "' . curl_error($curl) . '" - Code: ' . curl_errno($curl));
 		} else {
 			//cURL Response worked
 			if(!empty($channel)) {
-				if($result->stream == null) {
+				$return = json_decode($result);
+				
+				$this->curl_cache->set_data('streams', $result);
+				
+				if($return->stream == null) {
 					return false;
 				} else {
 					return true;
@@ -244,8 +429,15 @@ class TwitchTV {
 		}
 		curl_close($curl);
 	}
-	
-	//Loads the streams video, expects TwitchTV Username, additional paramaters allow for customizing the height and width of the embed
+
+	/**
+	 * Loads the video embed for twitch. Includes both object embed code (provided by twitch) and iframe for frameworks that don't support object players.
+	 * 
+	 * @param string $channel
+	 * @param int $height
+	 * @param int $width
+	 * @return html 		
+	 */
 	public function load_video($channel,$height = null, $width = null) {
 		//defaults for stream embed dimensions, set so you can pass in the height and width outside of this function
 		if($height == null && $width == null) {
@@ -255,20 +447,28 @@ class TwitchTV {
 		//make sure that a channel is passed in so that it doesn't return an invalid embed code
 		if(!empty($channel)) {
 			//embed code for the video thanks to twitch.tv
-			$embed_code = '<object type="application/x-shockwave-flash" height="'.$height.'" width="'.$width.'" id="live_embed_player_flash" data="http://www.twitch.tv/widgets/live_embed_player.swf?channel='.$channel.'" bgcolor="#000000">
+			$embed_code = '<iframe width="100%" height="'.$height.'" src="http://www.twitch.tv/widgets/live_embed_player.swf?channel='.$channel.'&auto_play=true&start_volume=25" frameborder="0" allowfullscreen="true" auto_play="true" start_volume="25"></iframe>';
+			/*$embed_code = '<object type="application/x-shockwave-flash" height="'.$height.'" width="100%" id="live_embed_player_flash" data="http://www.twitch.tv/widgets/live_embed_player.swf?channel='.$channel.'" bgcolor="#000000">
 								<param name="allowFullScreen" value="true" />
 								<param name="allowScriptAccess" value="always" />
 								<param name="allowNetworking" value="all" />
 								<param name="movie" value="http://www.twitch.tv/widgets/live_embed_player.swf" />
 								<param name="flashvars" value="hostname=www.twitch.tv&channel='.$channel.'&auto_play=true&start_volume=25" />
-							</object>';
+							</object>';*/
 			return $embed_code;
 		} else {
 			return;
 		}
 	}
 	
-	//Loads the streams chat, expects TwitchTV Username, additional paramaters allow for customizing the height and width of the embed
+	/**
+	 * Loads the chat for a given channel embed code provided by Twitch
+	 * 
+	 * @param string $channel
+	 * @param int $height
+	 * @param int $width
+	 * @return html
+	 */	
 	public function load_chat($channel,$height = null, $width = null) {
 		//defaults for stream embed dimensions, set so you can pass in the height and width outside of this function
 		if($height == null && $width == null) {
@@ -278,14 +478,18 @@ class TwitchTV {
 		//make sure that a channel is passed in so that it doesn't return an invalid embed code
 		if(!empty($channel)) {
 			//embed code thanks to twitch.tv
-			$embed_code = '<iframe frameborder="0" scrolling="no" id="chat_embed" src="http://twitch.tv/chat/embed?channel='.$channel.'&amp;popout_chat=true" height="'.$height.'" width="'.$width.'"></iframe>';
+			$embed_code = '<iframe frameborder="0" scrolling="no" id="chat_embed" src="http://twitch.tv/chat/embed?channel='.$channel.'&amp;popout_chat=true" height="'.$height.'" width="100%"></iframe>';
 			return $embed_code;
 		} else {
 			return;
 		}
 	}
-	
-	//Gets the current directory of all the games on TwitchTV currently streaming. This is returned in JSON to allow for an autocomplete functionality
+
+	/**
+	 * Gets a complete list of games that are currrently live on Twitch for use when updating stream title can be used to populate an autocomplete.
+	 * 
+	 * @return array
+	 */
 	public function get_games() {
 		$game = array();
 		for($i = 0; $i < 5; $i++){
@@ -303,9 +507,14 @@ class TwitchTV {
 		}
 		return json_encode($games);
 	}
-	
-	//Call this function if you want to run a commercial on the stream. Expects a access token, but can take a time
-	//for information about the length value please see https://github.com/justintv/Twitch-API/blob/master/v2_resources/channels.md#post-channelschannelcommercial
+
+	/**
+	 * Sends a request to twitch to run a commercial on a given channel
+	 * 
+	 * @param string $access_token
+	 * @param int $length
+	 * @return boolean
+	 */
 	public function run_commercial($access_token, $length = 30) {
 		$username = $this->authenticated_user($access_token);
 		$ch = curl_init($this->base_url . "channels/".$username.'/commercial');
@@ -322,8 +531,14 @@ class TwitchTV {
 		$response = json_decode($data, true);
 		return true;
 	}
-	
-	//Call this function if you want a give user to follow an account. Requires a channel to follow and the logged in users access token.
+
+	/**
+	 * Make a request to follow a given channel
+	 * 
+	 * @param string $channel
+	 * @param string $access_token
+	 * @return boolean
+	 */
 	public function follow_channel($channel,$access_token) {
 		$username = $this->authenticated_user($access_token);
 		$ch = curl_init($this->base_url . "users/" . $username . "/follows/channels/".$channel);
@@ -338,6 +553,105 @@ class TwitchTV {
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
 		$data = curl_exec($ch);
 		return true;
+	}
+
+	/**
+	 * Retrieve the data for a specific channel used to make cached calls throughout the class
+	 * 
+	 * @param string $username
+	 * @return array
+	 */
+	private function retrieve_channel_data($username) {
+		return json_decode(file_get_contents($this->base_url.'channels/'.$username));
+	}
+	/**
+	 * Checks to see if a given user has the subscription option. This uses the old metadata from Twitch, which is no longer updated
+	 * 
+	 * @param string $channel
+	 * @return boolean
+	 */
+	public function has_sub_button($channel) {
+		$ch = curl_init('http://www.twitch.tv/meta/'. $channel .'.xml');
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		$xml = curl_exec($ch);
+		$xml_object = simplexml_load_string($xml);
+
+		$sub_button = (array)($xml_object->subscription_program);
+		$has_sub_button = $sub_button[0];
+
+		return $has_sub_button;
+	}
+
+	/**
+	 * Loads the amount that it costs to subscribe to a channel for display in the subscribe button
+	 * 
+	 * @param string $channel
+	 * @return string
+	 */
+	public function subscription_cost($channel) {
+		$ch = curl_init('http://www.twitch.tv/meta/'. $channel .'.xml');
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		$xml = curl_exec($ch);
+		$xml_object = simplexml_load_string($xml);
+		$subscription_content = (array)($xml_object->pw_content->subscription->content);
+		$subscription_html = $subscription_content[0];
+		$price_loc_start = strrpos($subscription_html,'$');
+		$price_loc_end = strrpos($subscription_html,'USD');
+		$price_length = $price_loc_end-$price_loc_start;
+		$price_cost = substr($subscription_html, $price_loc_start,$price_length); 
+		return $price_cost;
+	}
+
+}
+
+
+/**
+ * A class to ensure that there aren't more calls to the API than needed
+ */
+class TwitchTV_Curl_Cache {
+	
+	/**
+	 * Holds the cache data
+	 */
+	private $cache = array();
+	
+	/**
+	 * Retrieve the cache data
+	 * 
+	 * @param string $id the cache key
+	 * @return multitype:
+	 */
+	public function get_data($id){
+		return array_key_exists($id, $this->cache) ? $this->cache[$id] : null;
+	}
+	
+	/**
+	 * Set the cache data
+	 * 
+	 * @param string $id the cache key. Recommended to be the slug name of the url in the cURL request
+	 * @param unknown $data
+	 */
+	public function set_data($id, $data){
+		return $this->cache[$id] = $data;
+	}
+	
+	/**
+	 * Remove an item from the cache
+	 * 
+	 * @param string $id
+	 */
+	public function unset_data($id){
+		unset($this->cache[$id]);
+	}
+	
+	/**
+	 * Checks if a key has been set in the cache
+	 * 
+	 * @param string $id
+	 * @return boolean
+	 */
+	public function data_exists($id){
+		return !empty($this->cache[$id]);
 	}
 }
 ?>
