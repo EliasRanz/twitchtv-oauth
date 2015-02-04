@@ -61,8 +61,8 @@ class TwitchTV {
 	 */
 	function get_access_token($code) {
 		$ch = curl_init($this->base_url . "oauth2/token");
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, FALSE);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($ch, CURLOPT_POST, 1);
 		$fields = array(
 			 'client_id' => $this->client_id,
