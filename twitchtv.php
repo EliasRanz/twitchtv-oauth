@@ -86,7 +86,7 @@ class TwitchTV {
 	 */
 	function authenticated_user($access_token) {
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $this->base_url . "user");
+		curl_setopt($ch, CURLOPT_URL, $this->base_url);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
 		         'Authorization: OAuth '.$access_token
@@ -99,7 +99,7 @@ class TwitchTV {
 			$error = 'Unauthorized';
 			return $error;
 		} else {
-			$username = $response['name'];
+			$username = $response['token']['user_name'];
 			return $username;
 		}
 	}
