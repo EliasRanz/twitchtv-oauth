@@ -568,6 +568,7 @@ class TwitchTV {
 
 /**
  * A class to ensure that there aren't more calls to the API than needed
+ * Written by Robarelli
  */
 class TwitchTV_Curl_Cache {
 	
