@@ -95,9 +95,8 @@ class TwitchTV {
 		$response = json_decode($output, true);
 		curl_close($ch);
 		
-		if(isset($response['error'])) {
-			$error = 'Unauthorized';
-			return $error;
+		if(isset($response['token']['error'])) {
+			return 'Unauthorized';
 		} else {
 			$username = $response['token']['user_name'];
 			return $username;
