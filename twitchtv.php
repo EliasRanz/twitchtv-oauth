@@ -71,7 +71,7 @@ class TwitchTV {
 			 'redirect_uri' => $this->redirect_url,
 			 'code' => $code
 		);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
 		$data = curl_exec($ch);
 		$response = json_decode($data, true);
 		return $response["access_token"];
@@ -273,7 +273,7 @@ class TwitchTV {
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
 			curl_setopt($ch, CURLOPT_POST, 1);
 			$fields = array('channel[status]' => $title, 'channel[game]' => $game);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
 			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: OAuth '.$access_token));
 			$output = curl_exec($ch);
 			$response = json_decode($output, true);
@@ -524,7 +524,7 @@ class TwitchTV {
 			 'client_id' => $this->client_id,
 			    'length' => $length
 		);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
 		$data = curl_exec($ch);
 		$response = json_decode($data, true);
 		return true;
@@ -548,7 +548,7 @@ class TwitchTV {
 		$fields = array(
 			'client_id' => $this->client_id,
 		);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
 		$data = curl_exec($ch);
 		return true;
 	}
