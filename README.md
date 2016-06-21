@@ -1,6 +1,6 @@
 twitchtv-oauth
 ==============
-A [Live Example](http//sandbox.eliasranzschleifer.com/twitch-oauth/) can be found on my website. Currently this doesn't have all of the methods, but you can see what I'm doing with the code and how I'm implementing it. I will do further documentation in the future.
+A [Live Example](http://sandbox.eliasranzschleifer.com/twitch-oauth/) can be found on my website. Currently this doesn't have all of the methods, but you can see what I'm doing with the code and how I'm implementing it. I will do further documentation in the future.
 
 A PHP class that allows you to do various features via the [TwitchTV API](https://github.com/justintv/twitch-api), including getting stats on your stream, updating your stream title/game, and running commercials.
 
@@ -47,6 +47,5 @@ If the authorization didn't work then you should see `Unauthorized`.  See the be
         echo 'Thank you '.$user_name.'!  Authentication Completed!';
     }
     ?>
-
 
 Note: I'm not actively developing on this project anymore, but if you have some work that you think could be migrated into this then please feel free to share. I just haven't had the desire to really add much to the script as it takes a lot of time to make sure things are situated. If you have questions about the script please post it in the issues and I'll get to it when I can.
