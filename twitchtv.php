@@ -175,12 +175,11 @@ class TwitchTV {
      * @return array         Array of data that includes the display name, Status, Chat links, game that the stream is playing and the banner
      */
     public function get_userid($username) {
-        $userid = $this->get_userid($username);
         //initiate connection to the twitch.tv servers
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $this->base_url . 'users/?login=' . $userid . '&client_id=' . $this->client_id . '&api_version=5'
+            CURLOPT_URL => $this->base_url . 'users/?login=' . $username . '&client_id=' . $this->client_id . '&api_version=5'
         ));
         $result = curl_exec($curl);
         //makes sure that the cURL was excuted if not it generates the error stating that it didn't succeed.
