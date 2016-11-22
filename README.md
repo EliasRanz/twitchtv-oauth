@@ -1,5 +1,7 @@
 twitchtv-oauth
 ==============
+_Quick disclaimer... I don't really have the same motivation to work on this anymore as I don't really use Twitch.tv anymore. If you are interested in working on it feel free to fork it and then do a pull request once you have updated code and I'll merge the changes in. I expect you guys to QA your own work, but I'll double check the commit prior to merging it in. The more help the better. Feel free to reach out to me on [Twitter](https://twitter.com/xxplosions) if you have questions._
+
 A [Live Example](http://sandbox.eliasranzschleifer.com/twitch-oauth/examples/) can be found on my website. Currently this doesn't have all of the methods, but you can see what I'm doing with the code and how I'm implementing it. I will do further documentation in the future.
 
 A PHP class that allows you to do various features via the [TwitchTV API](https://github.com/justintv/twitch-api), including getting stats on your stream, updating your stream title/game, and running commercials.
